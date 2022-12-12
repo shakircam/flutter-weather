@@ -2,29 +2,27 @@ import 'package:sqflite/sqflite.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-
 import '../models/user.dart';
 
 class DatabaseHelper{
-  static late DatabaseHelper _databaseHelper ;
-  static late Database _database;
 
-  DatabaseHelper._createInstance();
+  static  Database? _database;
 
   String userTable = "user_table";
   String colId = "id";
-  String colTitle = "title";
-  String colDes = "description";
-  String colPriority = "priority";
+  String colName = "name";
+  String colPhone = "phone";
+  String colAddress = "address";
 
+  static final DatabaseHelper _databaseHelper = DatabaseHelper._createInstance();
+
+  DatabaseHelper._createInstance();
 
   factory DatabaseHelper(){
-    if(_databaseHelper == null){
-      _databaseHelper = DatabaseHelper._createInstance(); // This will execute once, Singleton object
-    }
     return _databaseHelper;
   }
- Future<Database> get database async{
+
+ Future<Database?> get database async{
     if(_database == null){
       _database = await initializeDatabase();
     }
@@ -43,34 +41,50 @@ class DatabaseHelper{
   }
 
   void _createDb(Database db, int newVersion) async{
-      await db.execute('CREATE TABLE $userTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colTitle TEXT, $colDes TEXT, $colPriority TEXT)');
+    await db.execute('CREATE TABLE $userTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colName TEXT, '
+        '$colPhone TEXT, $colAddress TEXT)');
   }
 
-  // Read Operation
-  Future<List<Map<String, dynamic>>> readDataList() async {
-    Database db = await database;
-    var result = await db.query(userTable, orderBy: '$colPriority ASC');
+  // Fetch Operation: Get all note objects from database
+  Future<List<Map<String, dynamic>>?> getUserMapList() async {
+    Database? db = await database;
+    var result = await db?.query(userTable, orderBy: '$colName ASC');
     return result;
   }
 
-  // Write Operation
-  Future<int> insertData(User user) async{
-    Database db = await database;
-    var result = await db.insert(userTable, user.toMap());
+  // Get the 'Map List' [ List<Map> ] and convert it to 'Note List' [ List<Note> ]
+  Future<List<User>> getUserList() async {
+    // Get 'Map List' from database
+    var userMapList = await getUserMapList();
+    // Count the number of map entries in db table
+    int? count = userMapList?.length;
+
+    List<User> noteList = <User>[];
+    // For loop to create a 'Note List' from a 'Map List'
+    for (int i = 0; i < count!; i++) {
+      noteList.add(User.fromMap(userMapList![i]));
+    }
+    return noteList;
+  }
+
+  // Write Operation : Insert user data to db
+  Future<int?> insertData(User user) async{
+    Database? db = await database;
+    var result = await db?.insert(userTable, user.toMap());
     return result;
   }
 
   //Update operation
-  Future<int> updateData(User user) async{
-    Database db = await database;
-    var result = await db.update(userTable, user.toMap(),where: '$colId = ?',whereArgs: [user.id]);
+  Future<int?> updateData(User user) async{
+    Database? db = await database;
+    var result = await db?.update(userTable, user.toMap(),where: '$colId = ?',whereArgs: [user.id]);
     return result;
   }
 
   // Delete operation
-  Future<int> deleteNote(int id) async {
-    Database db = await database;
-    var result = await db.rawDelete('DELETE FROM $userTable WHERE $colId = $id' );
+  Future<int?> deleteNote(int id) async {
+    Database? db = await database;
+    var result = await db?.rawDelete('DELETE FROM $userTable WHERE $colId = $id' );
     return result;
   }
 

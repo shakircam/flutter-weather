@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:weather/profile.dart';
 import 'package:weather/screen/list_screen.dart';
 import 'package:weather/screen/loading_screen.dart';
+import 'package:weather/screen/user_list.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: CustomList(),
+      home: UserList(),
     );
   }
 }
