@@ -52,11 +52,10 @@ class DatabaseHelper{
     return result;
   }
 
-  // Get the 'Map List' [ List<Map> ] and convert it to 'Note List' [ List<Note> ]
+  // Get the 'Map List' [ List<Map> ] and convert it to 'Note List' [ List<User> ]
   Future<List<User>> getUserList() async {
     // Get 'Map List' from database
     var userMapList = await getUserMapList();
-    // Count the number of map entries in db table
     int? count = userMapList?.length;
 
     List<User> noteList = <User>[];
@@ -82,7 +81,7 @@ class DatabaseHelper{
   }
 
   // Delete operation
-  Future<int?> deleteNote(int id) async {
+  Future<int?> deleteData(int id) async {
     Database? db = await database;
     var result = await db?.rawDelete('DELETE FROM $userTable WHERE $colId = $id' );
     return result;

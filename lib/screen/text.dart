@@ -1,20 +1,18 @@
 
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
-
 import '../models/user.dart';
 import '../utils/database_helper.dart';
 
-class UserList extends StatefulWidget {
-   UserList({Key? key}) : super(key: key);
+class NoteList extends StatefulWidget {
 
   @override
-  State<UserList> createState() => _UserListState();
+  State<StatefulWidget> createState() => NoteListState();
+
 }
 
-class _UserListState extends State<UserList> {
+class NoteListState extends State<NoteList> {
 
   TextEditingController _nameController = TextEditingController();
   TextEditingController _phoneController = TextEditingController();
@@ -24,14 +22,16 @@ class _UserListState extends State<UserList> {
   late List<User> userList;
   int count = 0;
 
+
+  @override
+  void initState() {
+    super.initState();
+    updateListView();
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    if (userList == null) {
-      userList = <User>[];
-      updateListView();
-    }
-
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text("Custom List"),
@@ -89,7 +89,21 @@ class _UserListState extends State<UserList> {
     );
   }
 
-  //Dialog for input data from user
+
+  void updateListView() {
+    final Future<Database> dbFuture = databaseHelper.initializeDatabase();
+    dbFuture.then((database) {
+
+      Future<List<User>> noteListFuture = databaseHelper.getUserList();
+      noteListFuture.then((userList) {
+        setState(() {
+          this.userList = userList;
+          this.count = userList.length;
+        });
+      });
+    });
+  }
+
   _displayDialog(BuildContext context) async {
     return showDialog(
         context: context,
@@ -128,7 +142,9 @@ class _UserListState extends State<UserList> {
                   var address = _addressController.text.toString();
                   var user = User( name, phone,address);
                   insertUserData(user);
+
                   Navigator.of(context).pop();
+                  updateListView();
                 },
               )
             ],
@@ -137,22 +153,10 @@ class _UserListState extends State<UserList> {
     );
   }
 
-  void updateListView() {
-    final Future<Database> dbFuture = databaseHelper.initializeDatabase();
-    dbFuture.then((database) {
-      Future<List<User>> noteListFuture = databaseHelper.getUserList();
-      noteListFuture.then((userList) {
-        setState(() {
-          this.userList = userList;
-          count = userList.length;
-          print("user data list $userList");
-        });
-      });
-    });
-  }
-
   void insertUserData(User user) async {
     int? result = await databaseHelper.insertData(user);
     print("insert id is $result");
   }
+
 }
+
