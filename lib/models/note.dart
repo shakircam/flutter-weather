@@ -23,23 +23,9 @@ class Note {
   final String description;
   final DateTime createdTime;
 
-  const Note({
-    this.id,
-    required this.isImportant,
-    required this.number,
-    required this.title,
-    required this.description,
-    required this.createdTime,
-  });
+  const Note({this.id, required this.isImportant, required this.number, required this.title, required this.description, required this.createdTime});
 
-  Note copy({
-    int? id,
-    bool? isImportant,
-    int? number,
-    String? title,
-    String? description,
-    DateTime? createdTime,
-  }) =>
+  Note copy({int? id, bool? isImportant, int? number, String? title, String? description, DateTime? createdTime,}) =>
       Note(
         id: id ?? this.id,
         isImportant: isImportant ?? this.isImportant,

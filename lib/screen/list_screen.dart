@@ -1,31 +1,37 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:weather/screen/user_details.dart';
-import 'package:weather/widget/dialog.dart';
+import '../db/user_database.dart';
 import '../models/user.dart';
-import '../utils/database_helper.dart';
 
-class CustomList extends StatelessWidget {
-   CustomList({Key? key}) : super(key: key);
+class CustomList extends StatefulWidget {
 
-   DatabaseHelper databaseHelper = DatabaseHelper();
-   List<User>? userList;
-   int count = 0;
+  @override
+  _CustomListState createState() => _CustomListState();
 
-   TextEditingController _nameTextFieldController = TextEditingController();
-   TextEditingController _phoneTextFieldController = TextEditingController();
-   TextEditingController _addressTextFieldController = TextEditingController();
+}
 
+class _CustomListState extends State<CustomList> {
+
+  late List<User> userList;
+  int count = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    updateListView();
+  }
+
+  void updateListView() async {
+    userList = await UserDatabase.instance.readAllUser();
+  }
+
+  final TextEditingController _nameTextFieldController = TextEditingController();
+  final TextEditingController _phoneTextFieldController = TextEditingController();
+  final TextEditingController _addressTextFieldController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-
-    if (userList == null) {
-      updateListView();
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Custom List"),
@@ -38,40 +44,40 @@ class CustomList extends StatelessWidget {
             itemCount: userList?.length,
             itemBuilder: (context, index) =>
                 Card(
-                elevation: 8,
-                margin: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-            child : Row(
+                    elevation: 8,
+                    margin: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                    child: Row(
 
-              children: [
-                Container(
-                  margin: const EdgeInsets.fromLTRB(10,5,40,5),
-                  child: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.blue[500],
-                    child: Text(userList![index].id.toString()),
-                  ),
-                ),
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(10, 5, 40, 5),
+                          child: CircleAvatar(
+                            radius: 25,
+                            backgroundColor: Colors.blue[500],
+                            child: Text(userList![index].id.toString()),
+                          ),
+                        ),
 
-                Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      child: Text(userList![index].phone.toString())
-                    ),
-                    Container(
-                        padding: const EdgeInsets.all(5),
-                        child: Text(userList![index].address.toString())
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(0, 5 , 10, 5),
-                  child:const Icon(Icons.food_bank),
+                        Column(
+                          children: [
+                            Container(
+                                padding: const EdgeInsets.all(5),
+                                child: Text(userList![index].phone.toString())
+                            ),
+                            Container(
+                                padding: const EdgeInsets.all(5),
+                                child: Text(userList![index].address.toString())
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
+                          child: const Icon(Icons.food_bank),
+                        )
+                      ],
+                    )
                 )
-              ],
-             )
-            )
 
         ),
       ),
@@ -83,73 +89,85 @@ class CustomList extends StatelessWidget {
     );
   }
 
+
   //Dialog for input data from user
-   _displayDialog(BuildContext context) async {
-     return showDialog(
-         context: context,
-         builder: (context) {
-           return AlertDialog(
-             title: const Text('Add User Data '),
-             content: SingleChildScrollView(
-               child: Column(
-                 mainAxisSize: MainAxisSize.min,
-                 children: [
-                   TextField(
-                     controller: _nameTextFieldController,
-                     decoration: InputDecoration(hintText: "Enter Name"),
-                   ),
-                   TextField(
-                     controller: _phoneTextFieldController,
-                     decoration: InputDecoration(hintText: "Enter Phone"),
-                   ),
-                   TextField(
-                     controller: _addressTextFieldController,
-                     decoration: InputDecoration(hintText: "Enter Address"),
-                   ),
-                 ],
-               ),
-             ),
+  _displayDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Add User Data '),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _nameTextFieldController,
+                    decoration: InputDecoration(hintText: "Enter Name"),
+                  ),
+                  TextField(
+                    controller: _phoneTextFieldController,
+                    decoration: InputDecoration(hintText: "Enter Phone"),
+                  ),
+                  TextField(
+                    controller: _addressTextFieldController,
+                    decoration: InputDecoration(hintText: "Enter Address"),
+                  ),
+                ],
+              ),
+            ),
 
-             actions: [
-               TextButton(
-                 child: const Text('SUBMIT'),
-                 onPressed: () {
-                   print("name $_nameTextFieldController");
-                   print("_phone $_phoneTextFieldController");
-                   print("addrress $_addressTextFieldController");
-                   var name = _nameTextFieldController.text.toString();
-                   var phone = _phoneTextFieldController.text.toString();
-                   var address = _addressTextFieldController.text.toString();
-                   var user = User( name, phone,address);
-                   insertUserData(user);
-                   Navigator.of(context).pop();
-                 },
-               )
-             ],
-           );
-         }
-     );
-   }
+            actions: [
+              TextButton(
+                child: const Text('SUBMIT'),
+                onPressed: () {
+                  print("name $_nameTextFieldController");
+                  print("_phone $_phoneTextFieldController");
+                  print("addrress $_addressTextFieldController");
+                  var name = _nameTextFieldController.text.toString();
+                  var phone = _phoneTextFieldController.text.toString();
+                  var address = _addressTextFieldController.text.toString();
+                  var user = User(name, phone, address);
+                  insertUserData(user);
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        }
+    );
+  }
 
-   void updateListView() {
-     final Future<Database> dbFuture = databaseHelper.initializeDatabase();
-     dbFuture.then((database) {
+  @override
+  void dispose() {
+    UserDatabase.instance.close();
+    super.dispose();
+  }
 
-       Future<List<User>> noteListFuture = databaseHelper.getUserList();
-       noteListFuture.then((userList) {
-           this.userList = userList;
-           count = userList.length;
-           print("user data list $userList");
-       });
-     });
-   }
 
-   void insertUserData(User user) async {
-     int? result = await databaseHelper.insertData(user);
-     print("insert id is $result");
-   }
+
+/*  void updateListView() {
+    final Future<Database> dbFuture = databaseHelper.initializeDatabase();
+    dbFuture.then((database) {
+
+      Future<List<User>> noteListFuture = databaseHelper.getUserList();
+      noteListFuture.then((userList) {
+        setState(() {
+          this.userList = userList;
+          this.count = userList.length;
+        });
+      });
+    });
+  }*/
+
+  void insertUserData(User user) async {
+    int? result = await UserDatabase.instance.insertData(user);
+    print("insert id is $result");
+  }
 
 
 }
+
+
 
 

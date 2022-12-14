@@ -4,11 +4,10 @@ import 'package:sqflite/sqflite.dart';
 import '../models/note.dart';
 
 class NotesDatabase {
+
   static final NotesDatabase instance = NotesDatabase._init();
-
-  static Database? _database;
-
   NotesDatabase._init();
+  static Database? _database;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -42,6 +41,7 @@ CREATE TABLE $tableNotes (
 ''');
   }
 
+  // Write operation
   Future<Note> create(Note note) async {
     final db = await instance.database;
     final id = await db.insert(tableNotes, note.toJson());
@@ -50,7 +50,6 @@ CREATE TABLE $tableNotes (
 
   Future<Note> readNote(int id) async {
     final db = await instance.database;
-
     final maps = await db.query(
       tableNotes,
       columns: NoteFields.values,
@@ -67,7 +66,6 @@ CREATE TABLE $tableNotes (
 
   Future<List<Note>> readAllNotes() async {
     final db = await instance.database;
-
     final orderBy = '${NoteFields.time} ASC';
     final result = await db.query(tableNotes, orderBy: orderBy);
     return result.map((json) => Note.fromJson(json)).toList();

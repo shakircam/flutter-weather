@@ -39,11 +39,16 @@ class User{
   }
 
   //Map to object
-  User.fromMap (Map<String, dynamic> map){
+  User.fromMap(Map<String, dynamic> map){
      _id = map['id'];
      _name = map['name'];
      _phone = map['phone'];
      _address = map['address'];
    }
+
+
+
+
+
 
 }

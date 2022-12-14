@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:weather/screen/list_screen.dart';
 import 'package:weather/screen/note_list.dart';
 
 
@@ -9,7 +10,7 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  static final String title = 'Notes SQLite';
+  static const String title = 'Notes SQLite';
 
   // This widget is the root of your application.
   @override
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: NotesPage(),
+      home: CustomList(),
     );
   }
 }

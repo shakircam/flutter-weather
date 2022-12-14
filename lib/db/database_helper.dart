@@ -1,48 +1,46 @@
 import 'package:sqflite/sqflite.dart';
 import 'dart:async';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import '../models/user.dart';
+import '../utils/constants.dart';
 
 class DatabaseHelper{
 
+
+  static final DatabaseHelper _databaseHelper = DatabaseHelper._init();
+  DatabaseHelper._init();
   static  Database? _database;
 
-  String userTable = "user_table";
+
+
+  String userTable = "todo";
   String colId = "id";
   String colName = "name";
-  String colPhone = "phone";
+  int colPhone = 0;
   String colAddress = "address";
 
-  static final DatabaseHelper _databaseHelper = DatabaseHelper._createInstance();
-
-  DatabaseHelper._createInstance();
-
-  factory DatabaseHelper(){
-    return _databaseHelper;
-  }
 
  Future<Database?> get database async{
-    if(_database == null){
-      _database = await initializeDatabase();
-    }
+    if (_database != null) return _database!;
+    _database = await initializeDatabase();
     return _database;
  }
 
   Future<Database> initializeDatabase() async{
-    // Get the directory path both ios & android to store database
-    Directory directory = await getApplicationDocumentsDirectory();
-    String path = '${directory.path}notes.db';
+    final directory = await getDatabasesPath();
+    String a = 'notes.db';
+    String path = '$directory$a';
 
     //open/create  database at the given path
-    var notesDatabase = await openDatabase(path,version: 1,onCreate: _createDb);
-    return notesDatabase;
+    return await openDatabase(path,version: 1,onCreate: _createDb);
 
   }
 
-  void _createDb(Database db, int newVersion) async{
-    await db.execute('CREATE TABLE $userTable($colId INTEGER PRIMARY KEY AUTOINCREMENT, $colName TEXT, '
-        '$colPhone TEXT, $colAddress TEXT)');
+  Future _createDb(Database db, int version) async {
+    await db.execute('''CREATE TABLE $tableName ( 
+  $colId $idType, 
+  $colName $textType,
+  $colPhone $integerType,
+  $colAddress $textType)''');
   }
 
   // Fetch Operation: Get all note objects from database
@@ -54,17 +52,28 @@ class DatabaseHelper{
 
   // Get the 'Map List' [ List<Map> ] and convert it to 'Note List' [ List<User> ]
   Future<List<User>> getUserList() async {
-    // Get 'Map List' from database
     var userMapList = await getUserMapList();
     int? count = userMapList?.length;
-
     List<User> noteList = <User>[];
-    // For loop to create a 'Note List' from a 'Map List'
     for (int i = 0; i < count!; i++) {
       noteList.add(User.fromMap(userMapList![i]));
     }
     return noteList;
   }
+
+  Future<List<User>> readAllUser() async {
+    final db = await _databaseHelper.database;
+    final orderBy = '$colName ASC';
+    final result = await db?.query(tableName, orderBy: orderBy);
+
+    List<User> users = [];
+    result?.forEach((result) {
+      User user = User.fromMap(result);
+      users.add(user);
+    });
+    return users;
+  }
+
 
   // Write Operation : Insert user data to db
   Future<int?> insertData(User user) async{
@@ -72,6 +81,7 @@ class DatabaseHelper{
     var result = await db?.insert(userTable, user.toMap());
     return result;
   }
+
 
   //Update operation
   Future<int?> updateData(User user) async{
