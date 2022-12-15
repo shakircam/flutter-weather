@@ -13,52 +13,59 @@ class UserDatabase{
   Future<Database> get database async {
     if (_database != null) return _database!;
 
-    _database = await _initDB();
+    _database = await _initDB('user.db');
     return _database!;
   }
 
-  Future<Database> _initDB() async{
+  Future<Database> _initDB(String filePath) async{
     final directory = await getDatabasesPath();
-    String a = 'user.db';
-    String path = '$directory$a';
 
-    return await openDatabase(path,version: 1,onCreate: _createDb);
+    String path = '$directory$filePath';
+
+    return await openDatabase(path,version: 1,onCreate: _createDB);
 
   }
 
-  String userTable = "todo";
-  String colId = "id";
-  String colName = "name";
-  int colPhone = 0;
-  String colAddress = "address";
 
-  Future _createDb(Database db, int version) async {
-    await db.execute('''CREATE TABLE $tableName ( 
-  $colId $idType, 
-  $colName $textType,
-  $colPhone $integerType,
-  $colAddress $textType)''');
+  String colId = 'id';
+  String colName = 'name';
+  String colPhone = 'phone';
+  String colAddress = 'address';
+
+
+  Future _createDB(Database db, int version) async {
+    final idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
+    final textType = 'TEXT NOT NULL';
+    final boolType = 'BOOLEAN NOT NULL';
+    final integerType = 'INTEGER NOT NULL';
+
+    await db.execute('''
+  CREATE TABLE $tableName ( 
+  id $idType, 
+  name $textType,
+  phone $textType,
+  address $textType )
+  ''');
   }
 
   Future<List<User>> readAllUser() async {
     final db = await instance.database;
-    final orderBy = '$colName ASC';
+    const orderBy = 'name ASC';
     final result = await db.query(tableName, orderBy: orderBy);
 
     List<User> users = [];
-    result.forEach((result) {
-      User user = User.fromMap(result);
+    for (var result in result) {
+      User user = User.fromJson(result);
       users.add(user);
-    });
+    }
     return users;
   }
 
-
-  // Write Operation : Insert user data to db
-  Future<int?> insertData(User user) async{
-    Database? db = await database;
-    var result = await db.insert(userTable, user.toMap());
-    return result;
+  // Write operation
+  Future<int?> insertData(User user) async {
+    final db = await instance.database;
+    final id = await db.insert(userTable, user.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
+    return id;
   }
 
   Future close() async {

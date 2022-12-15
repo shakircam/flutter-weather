@@ -4,16 +4,17 @@ import 'package:flutter/material.dart';
 import '../db/user_database.dart';
 import '../models/user.dart';
 
-class CustomList extends StatefulWidget {
+class Card_item extends StatefulWidget {
+  const Card_item({Key? key}) : super(key: key);
 
   @override
-  _CustomListState createState() => _CustomListState();
-
+  State<Card_item> createState() => _Card_itemState();
 }
 
-class _CustomListState extends State<CustomList> {
+class _Card_itemState extends State<Card_item> {
 
-  late List<User> userList;
+
+  List<User> userList =[];
   int count = 0;
 
   @override
@@ -22,8 +23,16 @@ class _CustomListState extends State<CustomList> {
     updateListView();
   }
 
+
   void updateListView() async {
-    userList = await UserDatabase.instance.readAllUser();
+
+    print("...........................................");
+    var data = await UserDatabase.instance.readAllUser();
+    print("...................................ok$data");
+    setState(() {
+      userList = data;
+    });
+
   }
 
   final TextEditingController _nameTextFieldController = TextEditingController();
@@ -41,7 +50,7 @@ class _CustomListState extends State<CustomList> {
         iconColor: Colors.red,
         dense: true,
         child: ListView.builder(
-            itemCount: userList?.length,
+            itemCount: userList.length,
             itemBuilder: (context, index) =>
                 Card(
                     elevation: 8,
@@ -54,7 +63,7 @@ class _CustomListState extends State<CustomList> {
                           child: CircleAvatar(
                             radius: 25,
                             backgroundColor: Colors.blue[500],
-                            child: Text(userList![index].id.toString()),
+                            child: Text(userList[index].id.toString()),
                           ),
                         ),
 
@@ -62,11 +71,15 @@ class _CustomListState extends State<CustomList> {
                           children: [
                             Container(
                                 padding: const EdgeInsets.all(5),
-                                child: Text(userList![index].phone.toString())
+                                child: Text(userList[index].name.toString())
                             ),
                             Container(
                                 padding: const EdgeInsets.all(5),
-                                child: Text(userList![index].address.toString())
+                                child: Text(userList[index].phone.toString())
+                            ),
+                            Container(
+                                padding: const EdgeInsets.all(5),
+                                child: Text(userList[index].address.toString())
                             ),
                           ],
                         ),
@@ -127,8 +140,11 @@ class _CustomListState extends State<CustomList> {
                   var name = _nameTextFieldController.text.toString();
                   var phone = _phoneTextFieldController.text.toString();
                   var address = _addressTextFieldController.text.toString();
-                  var user = User(name, phone, address);
+                  var user = User( name: name,phone: phone,address: address);
                   insertUserData(user);
+                  setState(() {
+                    updateListView();
+                  });
                   Navigator.of(context).pop();
                 },
               )
@@ -165,8 +181,10 @@ class _CustomListState extends State<CustomList> {
     print("insert id is $result");
   }
 
-
 }
+
+
+
 
 
 
