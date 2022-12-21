@@ -2,7 +2,6 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import '../db/note_database.dart';
 import '../models/note.dart';
 import '../widget/note_form_widget.dart';

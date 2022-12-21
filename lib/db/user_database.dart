@@ -20,12 +20,11 @@ class UserDatabase{
   Future<Database> _initDB(String filePath) async{
     final directory = await getDatabasesPath();
 
-    String path = '$directory$filePath';
+    String path = '$directory $filePath';
 
     return await openDatabase(path,version: 1,onCreate: _createDB);
 
   }
-
 
   String colId = 'id';
   String colName = 'name';
@@ -34,18 +33,15 @@ class UserDatabase{
 
 
   Future _createDB(Database db, int version) async {
-    final idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
-    final textType = 'TEXT NOT NULL';
-    final boolType = 'BOOLEAN NOT NULL';
-    final integerType = 'INTEGER NOT NULL';
 
     await db.execute('''
-  CREATE TABLE $tableName ( 
+CREATE TABLE $tableName ( 
   id $idType, 
   name $textType,
   phone $textType,
-  address $textType )
-  ''');
+  address $textType
+  )
+''');
   }
 
   Future<List<User>> readAllUser() async {
@@ -66,6 +62,28 @@ class UserDatabase{
     final db = await instance.database;
     final id = await db.insert(userTable, user.toJson(), conflictAlgorithm: ConflictAlgorithm.replace);
     return id;
+  }
+
+  //Update operation
+  Future<int> update(User user) async {
+    final db = await instance.database;
+    return db.update(
+      userTable,
+      user.toJson(),
+      where: '${UserFields.id} = ?',
+      whereArgs: [user.id],
+    );
+  }
+
+  // Delete operation
+  Future<int> delete(int id) async {
+    final db = await instance.database;
+
+    return await db.delete(
+      userTable,
+      where: '${UserFields.id} = ?',
+      whereArgs: [id],
+    );
   }
 
   Future close() async {

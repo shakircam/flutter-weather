@@ -9,7 +9,7 @@ class UserFields{
     id, name, phone, address
   ];
 
-  static final String id = '_id';
+  static final String id = 'id';
   static final String name = 'name';
   static final String phone = 'phone';
   static final String address = 'address';
@@ -25,7 +25,7 @@ class User {
    User({this.id, required this.name, required this.phone, required this.address});
 
    User.fromJson(dynamic json)  {
-    id = json["id"];
+    id = json[UserFields.id];
     name = json[UserFields.name];
     phone = json[UserFields.phone];
     address = json[UserFields.address];

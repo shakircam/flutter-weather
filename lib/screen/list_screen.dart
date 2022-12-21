@@ -25,16 +25,14 @@ class _Card_itemState extends State<Card_item> {
 
 
   void updateListView() async {
-
-    print("...........................................");
     var data = await UserDatabase.instance.readAllUser();
-    print("...................................ok$data");
     setState(() {
       userList = data;
     });
 
   }
 
+  // For input
   final TextEditingController _nameTextFieldController = TextEditingController();
   final TextEditingController _phoneTextFieldController = TextEditingController();
   final TextEditingController _addressTextFieldController = TextEditingController();
@@ -43,7 +41,7 @@ class _Card_itemState extends State<Card_item> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Custom List"),
+        title: const Text("To-Do List"),
       ),
       body: ListTileTheme(
         style: ListTileStyle.list,
@@ -84,9 +82,31 @@ class _Card_itemState extends State<Card_item> {
                           ],
                         ),
                         const Spacer(),
-                        Container(
-                          margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
-                          child: const Icon(Icons.food_bank),
+                        InkWell(
+                          onTap: (){
+                            deleteUser(userList[index].id!);
+                            _showToast(context, "${userList[index].name.toString()} deleted");
+                            setState(() {
+                              updateListView();
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
+                            child: const Icon(Icons.delete),
+                          ),
+                        ),
+                        InkWell(
+                          onTap: (){
+                            _updateDialog(context, userList[index]);
+                            _showToast(context, "${userList[index].name.toString()} update");
+                            setState(() {
+                              updateListView();
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
+                            child: const Icon(Icons.update),
+                          ),
                         )
                       ],
                     )
@@ -95,9 +115,19 @@ class _Card_itemState extends State<Card_item> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: () =>
             _displayDialog(context),
+      ),
+    );
+  }
+
+  void _showToast(BuildContext context,String text) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        content:  Text(text),
+        action: SnackBarAction(label: 'UNDO', onPressed: scaffold.hideCurrentSnackBar),
       ),
     );
   }
@@ -119,6 +149,7 @@ class _Card_itemState extends State<Card_item> {
                     decoration: InputDecoration(hintText: "Enter Name"),
                   ),
                   TextField(
+                    keyboardType: TextInputType.number,
                     controller: _phoneTextFieldController,
                     decoration: InputDecoration(hintText: "Enter Phone"),
                   ),
@@ -134,13 +165,11 @@ class _Card_itemState extends State<Card_item> {
               TextButton(
                 child: const Text('SUBMIT'),
                 onPressed: () {
-                  print("name $_nameTextFieldController");
-                  print("_phone $_phoneTextFieldController");
-                  print("addrress $_addressTextFieldController");
                   var name = _nameTextFieldController.text.toString();
                   var phone = _phoneTextFieldController.text.toString();
                   var address = _addressTextFieldController.text.toString();
                   var user = User( name: name,phone: phone,address: address);
+
                   insertUserData(user);
                   setState(() {
                     updateListView();
@@ -154,31 +183,77 @@ class _Card_itemState extends State<Card_item> {
     );
   }
 
+  //Dialog for update data from user
+  _updateDialog(BuildContext context, User user) async {
+    // For update
+    final TextEditingController _nameTextFieldUpdate = TextEditingController(text: user.name);
+    final TextEditingController _phoneTextFieldUpdate = TextEditingController(text: user.phone);
+    final TextEditingController _addressTextFieldUpdate = TextEditingController(text: user.address);
+
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Update User Data '),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _nameTextFieldUpdate,
+                    decoration: InputDecoration(hintText: "Name"),
+                  ),
+                  TextField(
+                    controller: _phoneTextFieldUpdate,
+                    decoration: InputDecoration(hintText: "Phone"),
+                  ),
+                  TextField(
+                    controller: _addressTextFieldUpdate,
+                    decoration: InputDecoration(hintText: "Address"),
+                  ),
+                ],
+              ),
+            ),
+
+            actions: [
+              TextButton(
+                child: const Text('SUBMIT'),
+                onPressed: () {
+                  var name = _nameTextFieldUpdate.text.toString();
+                  var phone = _phoneTextFieldUpdate.text.toString();
+                  var address = _addressTextFieldUpdate.text.toString();
+                  var update = User(id: user.id, name: name,phone: phone,address: address);
+                  print("update name: $name phone: $phone address: $address");
+                  updateUserData(update);
+                  setState(() {
+                    updateListView();
+                  });
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        }
+    );
+  }
+
+
   @override
   void dispose() {
     UserDatabase.instance.close();
     super.dispose();
   }
 
+  void updateUserData(User user) async{
+    await UserDatabase.instance.update(user);
+  }
 
-
-/*  void updateListView() {
-    final Future<Database> dbFuture = databaseHelper.initializeDatabase();
-    dbFuture.then((database) {
-
-      Future<List<User>> noteListFuture = databaseHelper.getUserList();
-      noteListFuture.then((userList) {
-        setState(() {
-          this.userList = userList;
-          this.count = userList.length;
-        });
-      });
-    });
-  }*/
+  void deleteUser(int id) async {
+    await UserDatabase.instance.delete(id);
+  }
 
   void insertUserData(User user) async {
-    int? result = await UserDatabase.instance.insertData(user);
-    print("insert id is $result");
+     await UserDatabase.instance.insertData(user);
   }
 
 }
