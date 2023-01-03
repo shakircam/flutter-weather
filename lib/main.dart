@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.light,
       theme: ThemeData(
         primaryColor: Colors.black,
-        scaffoldBackgroundColor: Colors.blueGrey.shade800,
+        scaffoldBackgroundColor: Colors.blue.shade50,
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,

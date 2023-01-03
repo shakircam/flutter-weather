@@ -1,7 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:weather/models/company_network.dart';
+import 'package:weather/models/disease_category.dart';
 import '../db/user_database.dart';
 import '../models/user.dart';
+import '../service/disease.dart';
 
 class Card_item extends StatefulWidget {
   const Card_item({Key? key}) : super(key: key);
@@ -13,11 +17,22 @@ class Card_item extends StatefulWidget {
 class _Card_itemState extends State<Card_item> {
   List<User> userList = [];
   int count = 0;
+  List<DiseaseCategory> diseaseList = [];
+  late Future<CompanyNetwork> company;
+  DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
+
+  void getDisease() async {
+
+    Disease disease = Disease();
+    await disease.getCompany();
+  }
 
   @override
   void initState() {
     super.initState();
     updateListView();
+    Disease disease = Disease();
+    company = disease.getCompany();
   }
 
   void updateListView() async {
@@ -35,7 +50,8 @@ class _Card_itemState extends State<Card_item> {
   final TextEditingController _addressTextFieldController =
       TextEditingController();
 
-  String dropdownValue = 'Low';
+  // DateFormat('EEEE, MMM d, yyyy').format(DateTime.parse())
+
   List <String> items = [
     'Low',
     'Medium',
@@ -45,87 +61,106 @@ class _Card_itemState extends State<Card_item> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blueGrey.shade700,
+        backgroundColor: Colors.blue.shade300,
         title: const Text("To-Do List"),
       ),
       body: ListTileTheme(
         style: ListTileStyle.list,
         iconColor: Colors.red,
         dense: true,
-        child: ListView.builder(
-            itemCount: userList.length,
-            itemBuilder: (context, index) => Card(
-                color: Colors.amber.shade100,
-                elevation: 8,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                margin: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-                child: Row(
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(10, 5, 40, 5),
-                      child: CircleAvatar(
-                        radius: 25,
-                        backgroundColor: Colors.white,
-                        child: Text(userList[index].id.toString()),
+        child: FutureBuilder<CompanyNetwork>(
+          future: company,
+          builder: (context, snapshot){
+            if (snapshot.hasData) {
+              return ListView.builder(
+                  itemCount: snapshot.data?.data?.length,
+                  itemBuilder: (context, index) => Card(
+                      color: Colors.white,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
                       ),
-                    ),
-                    Column(
-                      children: [
-                        Container(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(userList[index].name.toString(),
-                              style: TextStyle(
-                                fontSize: 22,
-                                color: Colors.green.shade600,
-                                  fontWeight: FontWeight.bold
+                      margin: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                      child: Row(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.fromLTRB(10, 5, 40, 5),
+                            child: CircleAvatar(
+                              radius: 25,
+                              backgroundColor: Colors.grey.shade100,
+                              child: Text(snapshot.data!.data![index].id.toString(),
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.green.shade600,
+                                    fontWeight: FontWeight.bold
+                                ),
                               ),
-                            )),
-                        Container(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(userList[index].phone.toString(),
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold
+                            ),
+                          ),
+                          Column(
+                            children: [
+                              Container(
+                                  padding: const EdgeInsets.all(5),
+                                  child: Text(snapshot.data!.data![index].name.toString(),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.green.shade600,
+                                        fontWeight: FontWeight.bold
+                                    ),
+                                  )),
+                              Container(
+                                  padding: const EdgeInsets.all(5),
+                                  child: Text(DateFormat('EEEE, MMM d, yyyy').format(DateTime.parse(snapshot.data!.data![index].createdAt.toString())),
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold
+                                    ),
+                                  )),
+                              Container(
+                                  padding: const EdgeInsets.all(5),
+                                  child: Text(snapshot.data!.data![index].updatedAt.toString())
                               ),
-                            )),
-                        Container(
-                            padding: const EdgeInsets.all(5),
-                            child: Text(userList[index].address.toString())),
-                      ],
-                    ),
-                    const Spacer(),
-                    InkWell(
-                      onTap: () {
-                        _deleteItemDialog(context,userList[index]);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
-                        child: const Icon(Icons.delete),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: () {
-                        _updateDialog(context, userList[index]);
-                        _showToast(context,
-                            "${userList[index].name.toString()} update");
-                        setState(() {
-                          updateListView();
-                        });
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
-                        child: const Icon(Icons.update),
-                      ),
-                    )
-                  ],
-                ))),
+                            ],
+                          ),
+                          const Spacer(),
+                          InkWell(
+                            onTap: () {
+                              _deleteItemDialog(context,userList[index]);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
+                              child: const Icon(Icons.delete),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              _updateDialog(context, userList[index]);
+                              _showToast(context,
+                                  "${userList[index].name.toString()} update");
+                              setState(() {
+                                updateListView();
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.fromLTRB(0, 5, 10, 5),
+                              child: const Icon(Icons.update),
+                            ),
+                          )
+                        ],
+                      )));
+            } else if (snapshot.hasError) {
+              return Text('${snapshot.error}');
+            }
+
+            // By default, show a loading spinner.
+            return const CircularProgressIndicator();
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
-        onPressed: () => _displayDialog(context),
+        onPressed: () => getDisease(),
       ),
     );
   }
@@ -164,89 +199,73 @@ class _Card_itemState extends State<Card_item> {
         });
   }
 
-  void displayDeleteDialog(BuildContext context,User user) async{
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => CupertinoAlertDialog(
-        title: new Text("Delete"),
-        content: new Text("Do you want to delete the item"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              deleteUser(user.id!);
-              _showToast(context, "${user.name.toString()} deleted");
-              setState(() {
-                updateListView();
-              });
-              Navigator.of(context).pop();
-            },
-            child: const Text('Delete'),
-          )
-        ],
-      ),
-    );
-  }
 
   //Dialog for input data from user
   _displayDialog(BuildContext context) async {
-
+    String dropdownValue = 'Low';
     return showDialog(
         context: context,
         builder: (context) {
-          return AlertDialog(
-            title: const Text('Add User Data '),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _nameTextFieldController,
-                    decoration: InputDecoration(hintText: "Enter Name"),
+          return StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState){
+              return AlertDialog(
+                title: const Text('Add User Data '),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: _nameTextFieldController,
+                        decoration: InputDecoration(hintText: "Enter Name"),
+                      ),
+                      TextField(
+                        keyboardType: TextInputType.number,
+                        controller: _phoneTextFieldController,
+                        decoration: InputDecoration(hintText: "Enter Phone"),
+                      ),
+                      TextField(
+                        controller: _addressTextFieldController,
+                        decoration: InputDecoration(hintText: "Enter Address"),
+                      ),
+                      DropdownButton(
+                        icon: const Icon(Icons.keyboard_arrow_down),
+                        items: items.map((String items) {
+                          return DropdownMenuItem(
+                            value: items,
+                            child: Text(items),
+                          );
+                        }).toList(),
+                        value: dropdownValue,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            print("select $newValue");
+                            dropdownValue = newValue!;
+                          });
+                        },
+                      ),
+                    ],
                   ),
-                  TextField(
-                    keyboardType: TextInputType.number,
-                    controller: _phoneTextFieldController,
-                    decoration: InputDecoration(hintText: "Enter Phone"),
-                  ),
-                  TextField(
-                    controller: _addressTextFieldController,
-                    decoration: InputDecoration(hintText: "Enter Address"),
-                  ),
-                  DropdownButton(
-                    value: dropdownValue,
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                    items: items.map((String items) {
-                      return DropdownMenuItem(
-                        value: items,
-                        child: Text(items),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
+                ),
+                actions: [
+                  TextButton(
+                    child: const Text('SUBMIT'),
+                    onPressed: () {
+                      var name = _nameTextFieldController.text.toString();
+                      var phone = _phoneTextFieldController.text.toString();
+                      var address = _addressTextFieldController.text.toString();
+                      var user = User(name: name, phone: phone, address: address);
+
+                      insertUserData(user);
                       setState(() {
-                        dropdownValue = newValue!;
+                        updateListView();
                       });
+                      Navigator.of(context).pop();
                     },
                   ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                child: const Text('SUBMIT'),
-                onPressed: () {
-                  var name = _nameTextFieldController.text.toString();
-                  var phone = _phoneTextFieldController.text.toString();
-                  var address = _addressTextFieldController.text.toString();
-                  var user = User(name: name, phone: phone, address: address);
 
-                  insertUserData(user);
-                  setState(() {
-                    updateListView();
-                  });
-                  Navigator.of(context).pop();
-                },
-              )
-            ],
+                ],
+              );
+            }
           );
         });
   }
